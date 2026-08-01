@@ -500,7 +500,8 @@ def query_diagnosis():
 
 @app.route("/api/knowledge-graph", methods=["GET"])
 def get_knowledge_graph():
-    return jsonify(kg.get_graph_data())
+    data = kg.get_graph_data()
+    return jsonify({"success": True, "nodes": data["nodes"], "edges": data["edges"]})
 
 
 @app.route("/api/knowledge-graph/search", methods=["GET"])
@@ -514,7 +515,7 @@ def search_kg():
 def get_kg_node(node_id):
     detail = kg.get_node_detail(node_id)
     if detail:
-        return jsonify({"success": True, "node": detail})
+        return jsonify({"success": True, **detail})
     return jsonify({"error": "节点不存在"}), 404
 
 
