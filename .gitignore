@@ -29,6 +29,12 @@ predictive_maintenance/data/*.db
 predictive_maintenance/data/*.db-wal
 predictive_maintenance/data/*.db-shm
 
+# AI Quality Inspection - uploads and test data
+ai_quality_inspection/data/uploads/*
+!ai_quality_inspection/data/uploads/.gitkeep
+ai_quality_inspection/data/test_defect.png
+ai_quality_inspection/data/test_product.png
+
 # Model files (large binary)
 medical_imaging_assistant/models/*.pt
 medical_imaging_assistant/models/*.onnx

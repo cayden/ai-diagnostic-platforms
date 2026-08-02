@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI质检视觉检测平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">🔍</span>
+            <span class="logo-text">AI质检平台</span>
+        </div>
+        <nav class="nav">
+            <a class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')">
+                <span>📊</span><span>质检看板</span>
+            </a>
+            <a class="nav-item" data-page="inspect" onclick="switchPage('inspect')">
+                <span>📷</span><span>影像检测</span>
+            </a>
+            <a class="nav-item" data-page="history" onclick="switchPage('history')">
+                <span>📋</span><span>检测记录</span>
+            </a>
+            <a class="nav-item" data-page="stats" onclick="switchPage('stats')">
+                <span>📈</span><span>质量统计</span>
+            </a>
+            <a class="nav-item" data-page="chat" onclick="switchPage('chat')">
+                <span>💬</span><span>AI助手</span>
+            </a>
+            <a class="nav-item" data-page="knowledge" onclick="switchPage('knowledge')">
+                <span>🕸️</span><span>知识图谱</span>
+            </a>
+            <a class="nav-item" data-page="settings" onclick="switchPage('settings')">
+                <span>⚙️</span><span>系统设置</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="status-badge" id="systemStatus">运行中</div>
+            <div class="version">v1.0.0</div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main">
+        <!-- 质检看板 -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-header">
+                <h1>质检看板</h1>
+                <button class="btn btn-primary" onclick="refreshDashboard()">刷新</button>
+            </div>
+            <div class="stat-cards" id="dashboardStats">
+                <div class="stat-card"><div class="stat-icon">📷</div><div class="stat-value" id="statTotal">-</div><div class="stat-label">总检测数</div></div>
+                <div class="stat-card pass"><div class="stat-icon">✅</div><div class="stat-value" id="statPassed">-</div><div class="stat-label">合格</div></div>
+                <div class="stat-card fail"><div class="stat-icon">❌</div><div class="stat-value" id="statFailed">-</div><div class="stat-label">不合格</div></div>
+                <div class="stat-card rate"><div class="stat-icon">📊</div><div class="stat-value" id="statPassRate">-</div><div class="stat-label">合格率</div></div>
+                <div class="stat-card warn"><div class="stat-icon">⚠️</div><div class="stat-value" id="statDefects">-</div><div class="stat-label">缺陷总数</div></div>
+            </div>
+            <div class="dashboard-grid">
+                <div class="chart-card">
+                    <h3>质量趋势 (近7天)</h3>
+                    <div id="chartTrend" class="chart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>缺陷类型分布</h3>
+                    <div id="chartDefectPie" class="chart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>SPC控制图 - 不良率</h3>
+                    <div id="chartSPC" class="chart"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>产线合格率对比</h3>
+                    <div id="chartLineBar" class="chart"></div>
+                </div>
+            </div>
+            <div class="batch-table-card">
+                <h3>批次质量排名 TOP 10</h3>
+                <table class="data-table" id="batchTable">
+                    <thead><tr><th>批次号</th><th>检测数</th><th>合格</th><th>不合格</th><th>合格率</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 影像检测 -->
+        <section id="page-inspect" class="page">
+            <div class="page-header"><h1>影像检测</h1></div>
+            <div class="inspect-layout">
+                <div class="inspect-left">
+                    <div class="upload-card">
+                        <h3>上传产品图片进行AI检测</h3>
+                        <div class="form-row">
+                            <label>产品名称</label><input type="text" id="inspectProduct" value="通用零件" class="input">
+                        </div>
+                        <div class="form-row">
+                            <label>产品编码</label><input type="text" id="inspectCode" placeholder="选填" class="input">
+                        </div>
+                        <div class="form-row">
+                            <label>批次号</label><input type="text" id="inspectBatch" class="input">
+                        </div>
+                        <div class="form-row">
+                            <label>生产线</label><input type="text" id="inspectLine" value="1号线" class="input">
+                        </div>
+                        <div class="form-row">
+                            <label>检验工序</label>
+                            <select id="inspectProcess" class="input">
+                                <option value="来料检验">来料检验 (IQC)</option>
+                                <option value="注塑成型">注塑成型</option>
+                                <option value="冲压成型">冲压成型</option>
+                                <option value="机加工">机加工</option>
+                                <option value="表面处理">表面处理</option>
+                                <option value="组装装配">组装装配</option>
+                                <option value="成品检验" selected>成品检验 (FQC)</option>
+                            </select>
+                        </div>
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                            <div class="upload-placeholder">
+                                <span class="upload-icon">📤</span>
+                                <p>点击或拖拽上传图片</p>
+                                <p class="hint">支持 JPG/PNG/BMP</p>
+                            </div>
+                            <input type="file" id="fileInput" accept="image/*" hidden onchange="handleFileSelect(this)">
+                        </div>
+                        <div id="previewContainer" class="preview-container" style="display:none;"></div>
+                        <button class="btn btn-primary btn-block" id="btnInspect" onclick="runInspection()" disabled>
+                            开始AI检测
+                        </button>
+                    </div>
+                </div>
+                <div class="inspect-right">
+                    <div id="inspectResult" class="inspect-result-empty">
+                        <p>上传图片后点击「开始AI检测」查看结果</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 检测记录 -->
+        <section id="page-history" class="page">
+            <div class="page-header">
+                <h1>检测记录</h1>
+                <div class="header-actions">
+                    <input type="text" id="historySearch" placeholder="搜索产品/批次/记录ID" class="input" onkeyup="if(event.key==='Enter')loadHistory()">
+                    <select id="historyVerdict" class="input" onchange="loadHistory()">
+                        <option value="">全部</option>
+                        <option value="PASS">合格</option>
+                        <option value="FAIL">不合格</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadHistory()">查询</button>
+                </div>
+            </div>
+            <div class="table-card">
+                <table class="data-table" id="historyTable">
+                    <thead><tr><th>记录ID</th><th>产品</th><th>批次号</th><th>产线</th><th>判定</th><th>缺陷数</th><th>风险</th><th>耗时</th><th>时间</th><th>操作</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="historyPagination"></div>
+        </section>
+
+        <!-- 质量统计 -->
+        <section id="page-stats" class="page">
+            <div class="page-header">
+                <h1>质量统计</h1>
+                <select id="statsDays" class="input" onchange="loadStats()" style="width:auto;">
+                    <option value="7">近7天</option>
+                    <option value="14">近14天</option>
+                    <option value="30">近30天</option>
+                </select>
+            </div>
+            <div class="stat-cards" id="statsCards"></div>
+            <div class="dashboard-grid">
+                <div class="chart-card"><h3>每日检测量与合格率</h3><div id="chartStatsTrend" class="chart"></div></div>
+                <div class="chart-card"><h3>缺陷严重度分布</h3><div id="chartSeverity" class="chart"></div></div>
+                <div class="chart-card"><h3>缺陷类型TOP5</h3><div id="chartTopDefects" class="chart"></div></div>
+                <div class="chart-card"><h3>批次合格率排行</h3><div id="chartBatchRank" class="chart"></div></div>
+            </div>
+        </section>
+
+        <!-- AI助手 -->
+        <section id="page-chat" class="page">
+            <div class="page-header"><h1>AI质检助手</h1></div>
+            <div class="chat-layout">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message bot">
+                        <div class="msg-avatar">🤖</div>
+                        <div class="msg-content">您好！我是AI质检助手。可以回答关于缺陷分析、质量控制、SPC统计等方面的问题。请问有什么可以帮您？</div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="输入您的问题..." onkeyup="if(event.key==='Enter')sendChat()">
+                    <button class="btn btn-primary" onclick="sendChat()">发送</button>
+                </div>
+                <div class="chat-suggestions">
+                    <button onclick="quickAsk('什么是SPC统计过程控制？')">SPC统计过程控制</button>
+                    <button onclick="quickAsk('裂纹缺陷如何分析和处置？')">裂纹缺陷分析</button>
+                    <button onclick="quickAsk('质量合格判定标准是什么？')">合格判定标准</button>
+                    <button onclick="quickAsk('AI视觉检测的原理是什么？')">AI检测原理</button>
+                    <button onclick="quickAsk('如何实现质量追溯？')">质量追溯</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 知识图谱 -->
+        <section id="page-knowledge" class="page">
+            <div class="page-header">
+                <h1>缺陷知识图谱</h1>
+                <div class="header-actions">
+                    <input type="text" id="kgSearch" placeholder="搜索节点..." class="input" onkeyup="searchKG(this.value)">
+                    <button class="btn" onclick="resetKGView()">重置视图</button>
+                </div>
+            </div>
+            <div class="kg-layout">
+                <div class="kg-canvas-wrapper">
+                    <svg id="kgSvg" class="kg-svg"></svg>
+                </div>
+                <div class="kg-detail" id="kgDetail">
+                    <h3>节点详情</h3>
+                    <p class="hint">点击图谱中的节点查看详情</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 系统设置 -->
+        <section id="page-settings" class="page">
+            <div class="page-header"><h1>系统设置</h1></div>
+            <div class="settings-card">
+                <h3>YOLO检测配置</h3>
+                <div class="form-row">
+                    <label>检测模式</label>
+                    <select id="setDetMode" class="input">
+                        <option value="simulation">模拟模式 (演示)</option>
+                        <option value="model">模型模式 (需部署权重)</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>置信度阈值</label>
+                    <input type="number" id="setConf" class="input" value="0.45" min="0.1" max="0.99" step="0.05">
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3>Deepseek LLM配置</h3>
+                <div class="form-row">
+                    <label>分析模式</label>
+                    <select id="setLlmMode" class="input">
+                        <option value="simulation">模拟模式 (内置知识库)</option>
+                        <option value="api">API模式 (真实AI)</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>API Key</label>
+                    <input type="password" id="setApiKey" class="input" placeholder="sk-...">
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">保存配置</button>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- 记录详情弹窗 -->
+<div class="modal-overlay" id="recordModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>检测记录详情</h2>
+            <button class="btn-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="/static/js/knowledge_graph.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
