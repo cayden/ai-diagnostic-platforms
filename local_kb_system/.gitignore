@@ -1,0 +1,17 @@
+# 运行时数据（首次启动自动重建）
+data/kb.db
+data/kb.db-wal
+data/kb.db-shm
+data/uploads/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 日志
+*.log
+
+# 系统文件
+.DS_Store

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>湖企智库 · AI 本地知识库</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="loginPage" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-mark">湖</div>
+      <div>
+        <div class="login-title">湖企智库</div>
+        <div class="login-sub">AI 本地知识库 · 智能问答系统</div>
+      </div>
+    </div>
+    <div class="login-badge">DeepSeek 本地部署 · 数据不出域</div>
+    <div class="field">
+      <label>账号</label>
+      <input id="loginUser" placeholder="请输入账号" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input id="loginPass" type="password" placeholder="请输入密码" autocomplete="current-password">
+    </div>
+    <button id="loginBtn" class="btn btn-primary btn-block">登 录</button>
+    <div class="login-tip">演示账号：admin / admin123（管理员）　zhangwei / user123（普通用户）</div>
+    <div id="loginMsg" class="login-msg"></div>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="mainApp" class="app" style="display:none">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-mark small">湖</div>
+      <div class="brand-name">湖企智库</div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" data-page="dashboard"><span class="nav-ico">◈</span>工作台</a>
+      <a class="nav-item" data-page="kb"><span class="nav-ico">▤</span>知识库管理</a>
+      <a class="nav-item" data-page="chat"><span class="nav-ico">◉</span>智能问答</a>
+      <a class="nav-item" data-page="retrieve"><span class="nav-ico">⌕</span>检索测试</a>
+      <a class="nav-item" data-page="graph"><span class="nav-ico">✧</span>知识图谱</a>
+      <a class="nav-item" data-page="audit"><span class="nav-ico">☰</span>审计日志</a>
+      <a class="nav-item admin-only" data-page="users"><span class="nav-ico">♟</span>用户管理</a>
+      <a class="nav-item admin-only" data-page="system"><span class="nav-ico">⚙</span>系统设置</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="mode-chip" id="modeChip">模拟模式</div>
+      <div class="user-box">
+        <span id="navUser">--</span>
+        <span id="navRole" class="role-tag">--</span>
+        <button id="logoutBtn" class="btn btn-ghost btn-xs">退出</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h1 id="pageTitle">工作台</h1>
+      <div class="topbar-right">
+        <span class="sec-tag" id="secTag">数据不出域</span>
+        <span id="topUser" class="top-user"></span>
+      </div>
+    </header>
+
+    <!-- 工作台 -->
+    <section class="page active" id="page-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="stDocs">0</div><div class="stat-label">知识文档</div></div>
+        <div class="stat-card"><div class="stat-num" id="stChunks">0</div><div class="stat-label">知识片段</div></div>
+        <div class="stat-card"><div class="stat-num" id="stQa">0</div><div class="stat-label">累计问答</div></div>
+        <div class="stat-card"><div class="stat-num" id="stSat">--</div><div class="stat-label">回答满意度</div></div>
+      </div>
+      <div class="panel-row">
+        <div class="panel grow">
+          <div class="panel-head">知识分类分布</div>
+          <div id="catBars" class="cat-bars"></div>
+        </div>
+        <div class="panel grow">
+          <div class="panel-head">系统状态</div>
+          <div id="sysState" class="sys-state"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">最近问答</div>
+        <div id="recentQa" class="recent-qa"></div>
+      </div>
+    </section>
+
+    <!-- 知识库 -->
+    <section class="page" id="page-kb">
+      <div class="panel">
+        <div class="panel-head">上传企业文档</div>
+        <div class="upload-form">
+          <input type="file" id="kbFile" class="file-input">
+          <input id="kbTitle" class="input" placeholder="文档标题（留空用文件名）">
+          <select id="kbCat" class="select">
+            <option value="综合">综合</option><option value="制度">制度</option>
+            <option value="工艺">工艺</option><option value="质量">质量</option>
+            <option value="售后">售后</option><option value="信息安全">信息安全</option>
+          </select>
+          <select id="kbLevel" class="select">
+            <option value="公开">公开</option><option value="内部">内部</option>
+            <option value="机密">机密</option>
+          </select>
+          <button id="kbUploadBtn" class="btn btn-primary">上传入库</button>
+        </div>
+        <div id="kbMsg" class="msg"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">文档列表</div>
+        <table class="table" id="kbTable">
+          <thead><tr>
+            <th>标题</th><th>分类</th><th>密级</th><th>片段数</th><th>状态</th><th>更新时间</th><th>操作</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 智能问答 -->
+    <section class="page" id="page-chat">
+      <div class="chat-wrap">
+        <div id="chatBox" class="chat-box"></div>
+        <div class="chat-input-row">
+          <select id="chatCat" class="select chat-select">
+            <option value="">全部知识</option><option value="制度">制度</option>
+            <option value="工艺">工艺</option><option value="质量">质量</option>
+            <option value="售后">售后</option><option value="信息安全">信息安全</option>
+          </select>
+          <input id="chatInput" class="input grow" placeholder="输入问题，例如：出差住宿标准是多少？按回车发送">
+          <button id="chatSend" class="btn btn-primary">发送</button>
+        </div>
+        <div class="chat-hint">示例：出差住宿标准是多少？｜客户投诉如何处理？｜SMT回流焊温度要求？｜数据能否发给外部供应商？</div>
+      </div>
+    </section>
+
+    <!-- 检索测试 -->
+    <section class="page" id="page-retrieve">
+      <div class="panel">
+        <div class="panel-head">检索测试（展示语义检索效果）</div>
+        <div class="upload-form">
+          <input id="rtInput" class="input grow" placeholder="输入检索词，如：报销 发票">
+          <select id="rtCat" class="select">
+            <option value="">全部</option><option value="制度">制度</option>
+            <option value="工艺">工艺</option><option value="质量">质量</option>
+            <option value="售后">售后</option>
+          </select>
+          <button id="rtBtn" class="btn btn-primary">检索</button>
+        </div>
+      </div>
+      <div id="rtResult" class="rt-result"></div>
+    </section>
+
+    <!-- 知识图谱 -->
+    <section class="page" id="page-graph">
+      <div class="panel graph-panel">
+        <div class="panel-head">知识图谱 <span class="muted">（文档 → 主题 → 实体 关系网络）</span></div>
+        <div id="graphBox" class="graph-box">
+          <svg id="graphSvg" width="100%" height="520"></svg>
+        </div>
+        <div class="graph-legend">
+          <span><i class="lg-dot doc"></i>文档</span>
+          <span><i class="lg-dot topic"></i>主题</span>
+          <span><i class="lg-dot ent"></i>实体</span>
+          <span class="muted">拖动节点可调整布局</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 审计日志 -->
+    <section class="page" id="page-audit">
+      <div class="panel">
+        <div class="panel-head">审计日志 <span class="muted">（谁、何时、做了什么 —— 全程留痕）</span></div>
+        <table class="table" id="auditTable">
+          <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>对象</th><th>详情</th><th>IP</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 用户管理 -->
+    <section class="page" id="page-users">
+      <div class="panel">
+        <div class="panel-head">新增用户</div>
+        <div class="upload-form">
+          <input id="nuUser" class="input" placeholder="用户名">
+          <input id="nuPass" class="input" placeholder="初始密码">
+          <input id="nuDept" class="input" placeholder="部门">
+          <select id="nuRole" class="select">
+            <option value="user">普通用户</option><option value="admin">管理员</option>
+          </select>
+          <button id="nuBtn" class="btn btn-primary">新增</button>
+        </div>
+        <div id="nuMsg" class="msg"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">用户列表</div>
+        <table class="table" id="userTable">
+          <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>部门</th><th>数据级别</th><th>创建时间</th><th>操作</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 系统设置 -->
+    <section class="page" id="page-system">
+      <div class="panel">
+        <div class="panel-head">运行模式</div>
+        <div class="sys-rows">
+          <div class="sys-row">
+            <div class="sys-info">
+              <div class="sys-title">模拟模式</div>
+              <div class="sys-desc">无需 GPU 与模型，内置示例知识库，开箱即用 —— 适合展厅与方案演示</div>
+            </div>
+            <button class="btn btn-outline" data-mode="simulate">切换</button>
+          </div>
+          <div class="sys-row">
+            <div class="sys-info">
+              <div class="sys-title">本地推理模式</div>
+              <div class="sys-desc">调用本机 Ollama 部署的 DeepSeek 模型，真实大模型推理（数据不出域）</div>
+            </div>
+            <button class="btn btn-outline" data-mode="local">切换</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">模型与推理状态</div>
+        <div id="sysDetail" class="sys-detail"></div>
+        <button id="llmTestBtn" class="btn btn-primary">测试 DeepSeek 连通性</button>
+        <div id="llmTestOut" class="msg"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/static/js/app.js"></script>
+<script src="/static/js/knowledge_graph.js"></script>
+</body>
+</html>
