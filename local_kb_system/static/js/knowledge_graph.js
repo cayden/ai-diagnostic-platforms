@@ -5,7 +5,7 @@
   let svg, W = 900, H = 520, running = false, dragNode = null;
 
   const RADIUS = { document: 17, topic: 13, entity: 9 };
-  const COLOR = { document: "#1E2761", topic: "#028090", entity: "#F2A03D" };
+  const COLOR = { document: "#0A1330", topic: "#2563EB", entity: "#D9A441" };
 
   function $(id) { return document.getElementById(id); }
 
